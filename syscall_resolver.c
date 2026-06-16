@@ -5,15 +5,15 @@ FARPROC GetProcAddr(PVOID dllBytes, const char* apiName) {
     PIMAGE_EXPORT_DIRECTORY pExportDir = GetExportTable(dllBytes);
     if (pExportDir == NULL) return NULL;
 
-    PDWORD pFuncNameArray = (PDWORD)(dllBytes + pExportDir->AddressOfNames);
-    PDWORD pFuncAddrArray = (PDWORD)(dllBytes + pExportDir->AddressOfFunctions);
-    PWORD pFuncOrdinalArray = (PWORD)(dllBytes + pExportDir->AddressOfNameOrdinals);
+    PDWORD pNames = (PDWORD)(dllBytes + pExportDir->AddressOfNames);
+    PDWORD pAddresses = (PDWORD)(dllBytes + pExportDir->AddressOfFunctions);
+    PWORD pOrdinals = (PWORD)(dllBytes + pExportDir->AddressOfNameOrdinals);
     for (DWORD i = 0; i < pExportDir->NumberOfFunctions; i++) {
-        char* funcName = (char*)(dllBytes + pFuncNameArray[i]);
+        char* funcName = (char*)(dllBytes + pNames[i]);
 
         if (strcmp(apiName, funcName) == 0) {
-            WORD ordinal = pFuncOrdinalArray[i];
-            PVOID pFuncAddr = (PVOID)((PBYTE)dllBytes + pFuncAddrArray[ordinal]);
+            WORD ordinal = pOrdinals[i];
+            PVOID pFuncAddr = (PVOID)((PBYTE)dllBytes + pAddresses[ordinal]);
             return (FARPROC)pFuncAddr;
         }
     }

@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include "pe_parser.h"
+#include "syscall_resolver.h"
 
 typedef struct {
     DWORD ssn;
@@ -19,4 +20,6 @@ typedef struct {
 
 BOOL InitSyscallContext(SYSCALL_CONTEXT* ctx);
 VOID CleanupSyscallContext(SYSCALL_CONTEXT* ctx);
+BOOL BuildSyscallTable(SYSCALL_CONTEXT* ctx);
+DWORD FindSSN(SYSCALL_CONTEXT* ctx, const char* funcName);
 #endif
