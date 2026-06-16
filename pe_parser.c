@@ -31,13 +31,13 @@ PVOID LoadNtdllFromDisk() {
     return raw_bytes;
 }
 
-PIMAGE_EXPORT_DIRECTORY GetExportTable(PVOID pe_base) {
-    if (pe_base == NULL) return NULL;
+PIMAGE_EXPORT_DIRECTORY GetExportTable(PVOID dllBytes) {
+    if (dllBytes == NULL) return NULL;
 
-    PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)pe_base;
-    PIMAGE_NT_HEADERS pImageNtHeader = (PIMAGE_NT_HEADERS)((PBYTE)pe_base + pDosHeader->e_lfanew);
+    PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)dllBytes;
+    PIMAGE_NT_HEADERS pImageNtHeader = (PIMAGE_NT_HEADERS)((PBYTE)dllBytes + pDosHeader->e_lfanew);
     DWORD export_rva = pImageNtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
     if (export_rva == 0) return NULL;
 
-    return (PIMAGE_EXPORT_DIRECTORY)((PBYTE)pe_base + export_rva);
+    return (PIMAGE_EXPORT_DIRECTORY)((PBYTE)dllBytes + export_rva);
 }
