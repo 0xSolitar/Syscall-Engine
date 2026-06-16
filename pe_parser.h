@@ -6,4 +6,5 @@
 
 PVOID LoadNtdllFromDisk();
 PIMAGE_EXPORT_DIRECTORY GetExportTable(PVOID image_base);
+DWORD RVAToRawOffset(PVOID dllBase, DWORD rva);
 #endif

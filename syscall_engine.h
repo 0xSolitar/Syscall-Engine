@@ -7,7 +7,7 @@
 
 typedef struct {
     DWORD ssn;
-    PVOID syscall_addr;
+    DWORD syscall_addr;
     CHAR* func_name;
 } SYSCALL_ENTRY;
 

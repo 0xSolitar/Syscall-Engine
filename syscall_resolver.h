@@ -5,7 +5,7 @@
 #include <string.h>
 #include "pe_parser.h"
 
-DWORD ExtractSSN(FARPROC funcAddr);
-FARPROC GetProcAddr(PVOID dllBytes, const char* funcName);
+DWORD ExtractSSN(PVOID dllBase, DWORD funcRVA);
+DWORD GetProcAddr(PVOID dllBytes, const char* funcName);
 
 #endif

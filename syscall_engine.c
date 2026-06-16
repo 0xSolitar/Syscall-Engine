@@ -42,7 +42,6 @@ VOID CleanupSyscallContext(SYSCALL_CONTEXT *ctx) {
     ctx->exports = NULL;
     ctx->table_size = 0;
 }
-
 BOOL BuildSyscallTable(SYSCALL_CONTEXT *ctx) {
     if (ctx == NULL || ctx->ntdll_bytes == NULL) return FALSE;
 
@@ -54,20 +53,36 @@ BOOL BuildSyscallTable(SYSCALL_CONTEXT *ctx) {
     ctx->syscall_table = malloc(sizeof(SYSCALL_ENTRY) * ctx->table_size);
     if (ctx->syscall_table == NULL) return FALSE;
 
-    PDWORD pNames = (PDWORD)((PBYTE)ctx->ntdll_bytes + exports->AddressOfNames);
-    PDWORD pAddresses = (PDWORD)((PBYTE)ctx->ntdll_bytes + exports->AddressOfFunctions);
-    PWORD pOrdinals = (PWORD)((PBYTE)ctx->ntdll_bytes + exports->AddressOfNameOrdinals);
+    // Convert export table RVAs to raw offsets
+    DWORD namesRawOffset = RVAToRawOffset(ctx->ntdll_bytes, exports->AddressOfNames);
+    DWORD addressesRawOffset = RVAToRawOffset(ctx->ntdll_bytes, exports->AddressOfFunctions);
+    DWORD ordinalsRawOffset = RVAToRawOffset(ctx->ntdll_bytes, exports->AddressOfNameOrdinals);
+
+    if (namesRawOffset == 0 || addressesRawOffset == 0 || ordinalsRawOffset == 0) {
+        free(ctx->syscall_table);
+        ctx->syscall_table = NULL;
+        return FALSE;
+    }
+
+    PDWORD pNames = (PDWORD)((PBYTE)ctx->ntdll_bytes + namesRawOffset);
+    PDWORD pAddresses = (PDWORD)((PBYTE)ctx->ntdll_bytes + addressesRawOffset);
+    PWORD pOrdinals = (PWORD)((PBYTE)ctx->ntdll_bytes + ordinalsRawOffset);
 
     for (DWORD i = 0; i < ctx->table_size; i++) {
-        char* funcName = (char*)((PBYTE)ctx->ntdll_bytes + pNames[i]);
+        // Convert name RVA to raw offset
+        DWORD nameRawOffset = RVAToRawOffset(ctx->ntdll_bytes, pNames[i]);
+        if (nameRawOffset == 0) continue;
+
+        char* funcName = (char*)((PBYTE)ctx->ntdll_bytes + nameRawOffset);
 
         WORD ordinal = pOrdinals[i];
-        PVOID funcRVA = (PVOID)((PBYTE)ctx->ntdll_bytes + pAddresses[ordinal]);
-        DWORD ssn = ExtractSSN((FARPROC)funcRVA);
+        DWORD funcRVA = pAddresses[ordinal];
+
+        DWORD ssn = ExtractSSN(ctx->ntdll_bytes, funcRVA);
 
         ctx->syscall_table[i].ssn = ssn;
         ctx->syscall_table[i].syscall_addr = funcRVA;
-        ctx->syscall_table[i].func_name = strdup(funcName);
+        ctx->syscall_table[i].func_name = _strdup(funcName);
     }
 
     return TRUE;
