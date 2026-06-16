@@ -10,9 +10,10 @@ FARPROC GetProcAddr(PVOID dllBytes, const char* apiName) {
     PWORD pFuncOrdinalArray = (PWORD)(dllBytes + pExportDir->AddressOfNameOrdinals);
     for (DWORD i = 0; i < pExportDir->NumberOfFunctions; i++) {
         char* funcName = (char*)(dllBytes + pFuncNameArray[i]);
-        PVOID pFuncAddr = (PVOID)(dllBytes + pFuncAddrArray[pFuncOrdinalArray[i]]);
 
         if (strcmp(apiName, funcName) == 0) {
+            WORD ordinal = pFuncOrdinalArray[i];
+            PVOID pFuncAddr = (PVOID)((PBYTE)dllBytes + pFuncAddrArray[ordinal]);
             return (FARPROC)pFuncAddr;
         }
     }
