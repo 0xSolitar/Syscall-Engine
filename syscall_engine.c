@@ -2,8 +2,11 @@
 
 BOOL InitSyscallContext(SYSCALL_CONTEXT *ctx) {
     memset(ctx, 0, sizeof(SYSCALL_CONTEXT));
-    ctx->ntdll_bytes = LoadNtdllFromDisk();
-    if (!ctx->ntdll_bytes) return FALSE;
+    ctx->ntdll_bytes = GetNtdllFromMemory();
+    if (!ctx->ntdll_bytes) {
+        printf("ntdll failed to be loaded");
+        return FALSE;
+    }
 
     ctx->exports = GetExportTable(ctx->ntdll_bytes);
     if (!ctx->exports) {
@@ -54,9 +57,9 @@ BOOL BuildSyscallTable(SYSCALL_CONTEXT *ctx) {
     if (ctx->syscall_table == NULL) return FALSE;
 
     // Convert export table RVAs to raw offsets
-    DWORD namesRawOffset = RVAToRawOffset(ctx->ntdll_bytes, exports->AddressOfNames);
-    DWORD addressesRawOffset = RVAToRawOffset(ctx->ntdll_bytes, exports->AddressOfFunctions);
-    DWORD ordinalsRawOffset = RVAToRawOffset(ctx->ntdll_bytes, exports->AddressOfNameOrdinals);
+    DWORD namesRawOffset = exports->AddressOfNames;
+    DWORD addressesRawOffset = exports->AddressOfFunctions;
+    DWORD ordinalsRawOffset = exports->AddressOfNameOrdinals;
 
     if (namesRawOffset == 0 || addressesRawOffset == 0 || ordinalsRawOffset == 0) {
         free(ctx->syscall_table);
@@ -70,7 +73,7 @@ BOOL BuildSyscallTable(SYSCALL_CONTEXT *ctx) {
 
     for (DWORD i = 0; i < ctx->table_size; i++) {
         // Convert name RVA to raw offset
-        DWORD nameRawOffset = RVAToRawOffset(ctx->ntdll_bytes, pNames[i]);
+        DWORD nameRawOffset = pNames[i];
         if (nameRawOffset == 0) continue;
 
         char* funcName = (char*)((PBYTE)ctx->ntdll_bytes + nameRawOffset);

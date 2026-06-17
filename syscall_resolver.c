@@ -5,13 +5,13 @@ DWORD GetProcAddr(PVOID dllBytes, const char* apiName) {
     PIMAGE_EXPORT_DIRECTORY pExportDir = GetExportTable(dllBytes);
     if (pExportDir == NULL) return 0;
 
-    PDWORD pNames = (PDWORD)((PBYTE)dllBytes + RVAToRawOffset(dllBytes, pExportDir->AddressOfNames));
-    PDWORD pAddresses = (PDWORD)(dllBytes + RVAToRawOffset(dllBytes, pExportDir->AddressOfFunctions));
-    PWORD pOrdinals = (PWORD)(dllBytes + RVAToRawOffset(dllBytes, pExportDir->AddressOfNameOrdinals));
+    PDWORD pNames = (PDWORD)((PBYTE)dllBytes + pExportDir->AddressOfNames);
+    PDWORD pAddresses = (PDWORD)(dllBytes + pExportDir->AddressOfFunctions);
+    PWORD pOrdinals = (PWORD)(dllBytes + pExportDir->AddressOfNameOrdinals);
 
     for (DWORD i = 0; i < pExportDir->NumberOfNames; i++) {
         DWORD nameRVA = pNames[i];
-        DWORD nameRawOffset = RVAToRawOffset(dllBytes, nameRVA);
+        DWORD nameRawOffset = nameRVA;
         if (nameRawOffset == 0) continue;
 
         char* funcName = (char*)((PBYTE)dllBytes + nameRawOffset);
@@ -28,7 +28,7 @@ DWORD GetProcAddr(PVOID dllBytes, const char* apiName) {
 DWORD ExtractSSN(PVOID dllBase, DWORD funcRVA) {
     if (dllBase == NULL || funcRVA == 0) return 0;
 
-    DWORD rawOffset = RVAToRawOffset(dllBase, funcRVA);
+    DWORD rawOffset = funcRVA;
     if (rawOffset == 0) {
         printf("Coul not convert RVA 0x%X to raw offset\n", funcRVA);
         return 0;
