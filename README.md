@@ -1,3 +1,6 @@
+## How to use
+
+```c
 #include "syscall_engine.h"
 
 int main() {
@@ -20,3 +23,4 @@ int main() {
     DWORD ssn = FindSSN(&ctx, "NtCreateFile");
     printf("NtCreateFile SSN: 0x%X (%lu)\n", ssn, ssn);
 }
+```
